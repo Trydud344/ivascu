@@ -195,9 +195,9 @@
 
             let isMinimal = false;
             let lastScrollY = 0;
-            let currentTextColor = '#ffffff';
             let lastContrastCheck = 0;
             const contrastInterval = 120;
+            const itemColors = Array.from({ length: navItems.length }, () => '#ffffff');
 
             const imgCache = new WeakMap();
 
@@ -270,29 +270,17 @@
                 return null;
             }
 
-            function checkContrast() {
-                const navRect = navBar.getBoundingClientRect();
-                const sampleY = navRect.top + navRect.height / 2;
-                const sampleXs = [0.15, 0.3, 0.5, 0.7, 0.85].map(
-                    p => navRect.left + navRect.width * p
-                );
+            function checkItemContrasts() {
+                const sampleY = navBar.getBoundingClientRect().top + navBar.getBoundingClientRect().height / 2;
                 navBar.style.visibility = 'hidden';
-                let total = 0, count = 0;
-                for (const x of sampleXs) {
-                    const lum = sampleLuminanceAtPoint(x, sampleY);
-                    if (lum !== null) { total += lum; count++; }
-                }
+                const results = [];
+                navItems.forEach(item => {
+                    const r = item.getBoundingClientRect();
+                    const lum = sampleLuminanceAtPoint(r.left + r.width / 2, sampleY);
+                    results.push(lum !== null ? lum > 0.6 : false);
+                });
                 navBar.style.visibility = '';
-                if (count === 0) return false;
-                return total / count > 0.6;
-            }
-
-            function setTextColor(target) {
-                if (target === currentTextColor) return;
-                currentTextColor = target;
-                navItems.forEach(item => gsap.to(item, {
-                    color: target, duration: 0.25, ease: 'power2.out', overwrite: 'auto'
-                }));
+                return results;
             }
 
             function updateNavContrast() {
@@ -300,9 +288,25 @@
                     const now = performance.now();
                     if (now - lastContrastCheck < contrastInterval) return;
                     lastContrastCheck = now;
-                    setTextColor(checkContrast() ? '#000000' : '#ffffff');
+                    const brights = checkItemContrasts();
+                    navItems.forEach((item, i) => {
+                        const target = brights[i] ? '#000000' : '#ffffff';
+                        if (itemColors[i] !== target) {
+                            itemColors[i] = target;
+                            gsap.to(item, {
+                                color: target, duration: 0.25, ease: 'power2.out', overwrite: 'auto'
+                            });
+                        }
+                    });
                 } else {
-                    setTextColor('#ffffff');
+                    navItems.forEach((item, i) => {
+                        if (itemColors[i] !== '#ffffff') {
+                            itemColors[i] = '#ffffff';
+                            gsap.to(item, {
+                                color: '#ffffff', duration: 0.25, ease: 'power2.out', overwrite: 'auto'
+                            });
+                        }
+                    });
                 }
             }
 
