@@ -26,7 +26,7 @@
                 position: absolute;
                 inset: 0;
                 border-radius: 100px;
-                background: #1c1f1d;
+                background: #181818;
                 box-shadow:
                     0 4px 20px rgba(0, 0, 0, 0.3),
                     0 1px 3px rgba(0, 0, 0, 0.2),
@@ -42,7 +42,7 @@
                 top: 6px;
                 height: calc(100% - 12px);
                 width: 64px;
-                background: #ebf7ef;
+                background: #eaeaea;
                 border-radius: 100px;
                 pointer-events: none;
                 box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
@@ -54,7 +54,7 @@
                 position: relative;
                 z-index: 2;
                 padding: 12px 24px;
-                color: #d4d4d4;
+                color: #ffffff;
                 font-size: 15px;
                 font-weight: 500;
                 cursor: pointer;
@@ -63,8 +63,6 @@
                 mix-blend-mode: difference;
                 will-change: padding;
             }
-
-            .nav-item.active { color: #ffffff }
 
             .nav-item svg {
                 width: 18px;
