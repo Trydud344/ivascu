@@ -296,7 +296,7 @@
             }
 
             function updateNavContrast() {
-                if (isMinimal) {
+                if (navBg.classList.contains('minimal')) {
                     const now = performance.now();
                     if (now - lastContrastCheck < contrastInterval) return;
                     lastContrastCheck = now;
@@ -350,6 +350,8 @@
                     gsap.to(navBar, { scale: 0.92, duration: 0.3, ease: "power2.out" });
                     navItems.forEach(item => gsap.to(item, { padding: "12px 14px", duration: 0.3, ease: "power2.out" }));
                     gsap.to(highlight, { opacity: 0, duration: 0.08, ease: "power2.in" });
+                    lastContrastCheck = 0;
+                    updateNavContrast();
                 }
             });
 
