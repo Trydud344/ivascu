@@ -42,7 +42,7 @@
                 top: 6px;
                 height: calc(100% - 12px);
                 width: 64px;
-                background: #eaeaea;
+                background: #ffffff;
                 border-radius: 100px;
                 pointer-events: none;
                 box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
