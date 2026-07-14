@@ -1,4 +1,3 @@
-import GradualBlur from '../components/GradualBlur/GradualBlur';
 import RotatingText from '../components/RotatingText/RotatingText';
 
 function Home() {
@@ -99,18 +98,6 @@ function Home() {
           Nam libero tempore, cum soluta nobis est eligendi optio cumque nihil impedit quo minus id quod maxime placeat facere possimus, omnis voluptas assumenda est.
         </p>
       </main>
-
-      <GradualBlur
-        target="page"
-        position="top"
-        height="6rem"
-        strength={3}
-        divCount={8}
-        curve="bezier"
-        exponential={true}
-        opacity={1}
-        zIndex={-1}
-      />
     </>
   );
 }

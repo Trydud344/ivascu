@@ -1,14 +1,17 @@
-import { readdir, stat, mkdir } from 'fs/promises';
-import { existsSync, createWriteStream } from 'fs';
+#!/usr/bin/env node
+import { readdir, stat, mkdir, writeFile } from 'fs/promises';
+import { existsSync } from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import sharp from 'sharp';
 
 const ALLOWED_INPUT = /\.(jpg|jpeg|png|webp|avif|heic|heif)$/i;
-const ALLOWED_SERVE = /\.(jpg|jpeg|png|webp|avif)$/i;
 
-const INPUT_DIR = path.resolve(process.env.PHOTO_DIR || './photos');
-const GENERATED_DIR = path.resolve(process.env.GENERATED_DIR || './public/photos/generated');
-const JSON_OUTPUT = path.resolve(process.env.JSON_OUTPUT || './public/photos.json');
+const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
+const INPUT_DIR = path.resolve(process.env.PHOTO_DIR || SCRIPT_DIR);
+const GENERATED_DIR = path.resolve(INPUT_DIR, 'generated');
+const JSON_OUTPUT = path.resolve(INPUT_DIR, 'photos.json');
+const URL_PREFIX = process.env.PHOTO_URL_PREFIX || '/photos';
 
 const THUMB_WIDTH = 600;
 const FULL_WIDTH = 1920;
@@ -43,7 +46,11 @@ async function processImage(inputPath, outputName) {
     const { mtimeMs: inputMtime } = await stat(inputPath);
     const { mtimeMs: thumbMtime } = await stat(thumbPath);
     if (thumbMtime >= inputMtime) {
-      return { thumbPath: `/photos/generated/${outputName}-thumb.webp`, fullPath: `/photos/generated/${outputName}-full.webp`, wasCached: true };
+      return {
+        thumbUrl: `${URL_PREFIX}/generated/${outputName}-thumb.webp`,
+        fullUrl: `${URL_PREFIX}/generated/${outputName}-full.webp`,
+        wasCached: true,
+      };
     }
   }
 
@@ -59,7 +66,11 @@ async function processImage(inputPath, outputName) {
     pipeline.clone().resize(FULL_WIDTH).webp({ quality: 85 }).toFile(fullPath),
   ]);
 
-  return { aspectRatio, thumbPath: `/photos/generated/${outputName}-thumb.webp`, fullPath: `/photos/generated/${outputName}-full.webp` };
+  return {
+    aspectRatio,
+    thumbUrl: `${URL_PREFIX}/generated/${outputName}-thumb.webp`,
+    fullUrl: `${URL_PREFIX}/generated/${outputName}-full.webp`,
+  };
 }
 
 async function main() {
@@ -67,7 +78,6 @@ async function main() {
 
   if (!existsSync(INPUT_DIR)) {
     console.error(`Input directory not found: ${INPUT_DIR}`);
-    console.error('Set PHOTO_DIR env var or symlink your photos to ./photos');
     process.exit(1);
   }
 
@@ -108,29 +118,20 @@ async function main() {
 
     photos.push({
       id: outputName,
-      thumb: result.thumbPath,
-      full: result.fullPath,
+      thumb: result.thumbUrl,
+      full: result.fullUrl,
       aspectRatio: result.aspectRatio || 1,
     });
 
-    if (result.wasCached) {
-      cached++;
-    } else {
-      processed++;
-    }
+    if (result.wasCached) cached++;
+    else processed++;
   }
-
-  const jsonDir = path.dirname(JSON_OUTPUT);
-  await ensureDir(jsonDir);
 
   const jsonContent = JSON.stringify(photos, null, 2);
+  await writeFile(JSON_OUTPUT, jsonContent, 'utf-8');
 
-  if (JSON_OUTPUT.endsWith('.json')) {
-    const { writeFile } = await import('fs/promises');
-    await writeFile(JSON_OUTPUT, jsonContent, 'utf-8');
-    console.log(`\nDone. ${processed} processed, ${cached} cached.`);
-    console.log(`Wrote ${photos.length} entries to ${JSON_OUTPUT}`);
-  }
+  console.log(`\nDone. ${processed} processed, ${cached} cached.`);
+  console.log(`Wrote ${photos.length} entries to ${JSON_OUTPUT}`);
 }
 
 main().catch(err => {
