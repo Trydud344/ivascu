@@ -42,7 +42,7 @@
                 top: 6px;
                 height: calc(100% - 12px);
                 width: 64px;
-                background: #ffffff;
+                background: rgba(255, 255, 255, 0.12);
                 border-radius: 100px;
                 pointer-events: none;
                 box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
@@ -60,9 +60,10 @@
                 cursor: pointer;
                 white-space: nowrap;
                 letter-spacing: -0.01em;
-                mix-blend-mode: difference;
                 will-change: padding;
             }
+
+            .nav-item.active { font-weight: 700 }
 
             .nav-item svg {
                 width: 18px;
@@ -194,6 +195,45 @@
 
             let isMinimal = false;
             let lastScrollY = 0;
+            let currentTextColor = '#ffffff';
+            let lastSampleTime = 0;
+
+            function getBgLuminance() {
+                const rect = root.getBoundingClientRect();
+                const sampleX = rect.left + rect.width / 2;
+                const sampleY = rect.bottom + 8;
+                const els = document.elementsFromPoint(sampleX, sampleY);
+                for (const el of els) {
+                    if (el === root || root.contains(el)) continue;
+                    if (el === document.body || el === document.documentElement) continue;
+                    const bg = getComputedStyle(el).backgroundColor;
+                    if (!bg || bg === 'rgba(0, 0, 0, 0)' || bg === 'transparent') continue;
+                    const rgb = bg.match(/\d+/g);
+                    if (!rgb || rgb.length < 3) continue;
+                    const r = parseInt(rgb[0]), g = parseInt(rgb[1]), b = parseInt(rgb[2]);
+                    return (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+                }
+                return 0;
+            }
+
+            function setTextColor(target) {
+                if (target === currentTextColor) return;
+                currentTextColor = target;
+                navItems.forEach(item => gsap.to(item, {
+                    color: target,
+                    duration: 0.25,
+                    ease: 'power2.out',
+                    overwrite: 'auto'
+                }));
+            }
+
+            function updateTextColor() {
+                if (isMinimal) {
+                    setTextColor(getBgLuminance() > 0.5 ? '#000000' : '#ffffff');
+                } else {
+                    setTextColor('#ffffff');
+                }
+            }
 
             function setMinimal(should) {
                 if (should && !isMinimal) {
@@ -209,6 +249,7 @@
                     navItems.forEach(item => gsap.to(item, { padding: "12px 24px", duration: 0.3, ease: "power2.out" }));
                     gsap.to(highlight, { opacity: 1, duration: 0.6, ease: "power2.out", delay: 0.15 });
                 }
+                updateTextColor();
             }
 
             window.addEventListener('scroll', () => {
@@ -216,6 +257,12 @@
                 lastScrollY = window.scrollY;
                 if (dir > 0 && window.scrollY > 100) setMinimal(true);
                 else if (dir < 0) setMinimal(false);
+
+                const now = Date.now();
+                if (now - lastSampleTime > 80) {
+                    lastSampleTime = now;
+                    updateTextColor();
+                }
             }, { passive: true });
 
             root.addEventListener('mouseenter', () => {
@@ -235,6 +282,8 @@
                     gsap.to(highlight, { opacity: 0, duration: 0.08, ease: "power2.in" });
                 }
             });
+
+            requestAnimationFrame(updateTextColor);
         }
     }
 
