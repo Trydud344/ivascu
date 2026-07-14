@@ -196,79 +196,119 @@
             let isMinimal = false;
             let lastScrollY = 0;
             let currentTextColor = '#ffffff';
-            let lastSampleTime = 0;
+            let lastContrastCheck = 0;
+            const contrastInterval = 120;
 
-            function sampleImagePixel(img, sx, sy) {
-                const r = img.getBoundingClientRect();
-                if (!r.width || !r.height || !img.complete) return -1;
+            const imgCache = new WeakMap();
+
+            function getCachedCanvas(img) {
+                if (imgCache.has(img)) return imgCache.get(img);
+                const size = 64;
                 const c = document.createElement('canvas');
-                c.width = img.naturalWidth;
-                c.height = img.naturalHeight;
-                const ctx = c.getContext('2d');
-                ctx.drawImage(img, 0, 0);
-                const px = Math.round((sx - r.left) / r.width * img.naturalWidth);
-                const py = Math.round((sy - r.top) / r.height * img.naturalHeight);
-                try {
-                    const d = ctx.getImageData(
-                        Math.max(0, Math.min(px, img.naturalWidth - 1)),
-                        Math.max(0, Math.min(py, img.naturalHeight - 1)), 1, 1
-                    ).data;
-                    return (0.299 * d[0] + 0.587 * d[1] + 0.114 * d[2]) / 255;
-                } catch { return -1; }
+                c.width = size;
+                c.height = size;
+                const ctx = c.getContext('2d', { willReadFrequently: true });
+                ctx.drawImage(img, 0, 0, size, size);
+                const obj = { ctx, size };
+                imgCache.set(img, obj);
+                return obj;
             }
 
-            function samplePoint(sx, sy) {
-                const els = document.elementsFromPoint(sx, sy);
+            function sampleImageLum(img, px, py) {
+                if (!img.complete || !img.naturalWidth) return null;
+                const r = img.getBoundingClientRect();
+                const style = getComputedStyle(img);
+                const fit = style.objectFit || 'fill';
+                let nx, ny;
+                if (fit === 'cover') {
+                    const rEl = r.width / r.height;
+                    const rImg = img.naturalWidth / img.naturalHeight;
+                    let rw, rh, ox, oy;
+                    if (rImg > rEl) {
+                        rh = r.height; rw = r.height * rImg; ox = (r.width - rw) / 2; oy = 0;
+                    } else {
+                        rw = r.width; rh = r.width / rImg; ox = 0; oy = (r.height - rh) / 2;
+                    }
+                    nx = (px - r.left - ox) / rw;
+                    ny = (py - r.top - oy) / rh;
+                } else {
+                    nx = (px - r.left) / r.width;
+                    ny = (py - r.top) / r.height;
+                }
+                nx = Math.max(0, Math.min(1, nx));
+                ny = Math.max(0, Math.min(1, ny));
+                try {
+                    const { ctx, size } = getCachedCanvas(img);
+                    const d = ctx.getImageData(
+                        Math.round(nx * (size - 1)), Math.round(ny * (size - 1)), 1, 1
+                    ).data;
+                    return (0.299 * d[0] + 0.587 * d[1] + 0.114 * d[2]) / 255;
+                } catch { return null; }
+            }
+
+            function parseRGBA(str) {
+                const m = str.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
+                if (!m) return null;
+                return { r: +m[1], g: +m[2], b: +m[3], a: m[4] !== undefined ? +m[4] : 1 };
+            }
+
+            function sampleLuminanceAtPoint(x, y) {
+                const els = document.elementsFromPoint(x, y);
                 for (const el of els) {
-                    if (el === root || root.contains(el)) continue;
-                    if (el === document.body || el === document.documentElement) continue;
+                    if (el.tagName === 'BODY' || el.tagName === 'HTML') continue;
                     if (el.tagName === 'IMG') {
-                        const lum = sampleImagePixel(el, sx, sy);
-                        if (lum >= 0) return lum;
+                        const lum = sampleImageLum(el, x, y);
+                        if (lum !== null) return lum;
                         continue;
                     }
                     const bg = getComputedStyle(el).backgroundColor;
-                    if (!bg || bg === 'rgba(0, 0, 0, 0)' || bg === 'transparent') continue;
-                    const rgb = bg.match(/\d+/g);
-                    if (!rgb || rgb.length < 3) continue;
-                    return (0.299 * parseInt(rgb[0]) + 0.587 * parseInt(rgb[1]) + 0.114 * parseInt(rgb[2])) / 255;
+                    const rgba = parseRGBA(bg);
+                    if (rgba && rgba.a > 0.1) {
+                        return (0.299 * rgba.r + 0.587 * rgba.g + 0.114 * rgba.b) / 255;
+                    }
                 }
-                return -1;
+                return null;
             }
 
-            function getBgLuminance() {
-                const rect = root.getBoundingClientRect();
-                const pts = [
-                    { x: rect.left + rect.width * 0.25, y: rect.bottom + 8 },
-                    { x: rect.left + rect.width * 0.5, y: rect.bottom + 8 },
-                    { x: rect.left + rect.width * 0.75, y: rect.bottom + 8 },
-                ];
+            function checkContrast() {
+                const navRect = navBar.getBoundingClientRect();
+                const sampleY = navRect.top + navRect.height / 2;
+                const sampleXs = [0.15, 0.3, 0.5, 0.7, 0.85].map(
+                    p => navRect.left + navRect.width * p
+                );
+                navBar.style.visibility = 'hidden';
                 let total = 0, count = 0;
-                for (const p of pts) {
-                    const lum = samplePoint(p.x, p.y);
-                    if (lum >= 0) { total += lum; count++; }
+                for (const x of sampleXs) {
+                    const lum = sampleLuminanceAtPoint(x, sampleY);
+                    if (lum !== null) { total += lum; count++; }
                 }
-                return count > 0 ? total / count : 0;
+                navBar.style.visibility = '';
+                if (count === 0) return false;
+                return total / count > 0.6;
             }
 
             function setTextColor(target) {
                 if (target === currentTextColor) return;
                 currentTextColor = target;
                 navItems.forEach(item => gsap.to(item, {
-                    color: target,
-                    duration: 0.25,
-                    ease: 'power2.out',
-                    overwrite: 'auto'
+                    color: target, duration: 0.25, ease: 'power2.out', overwrite: 'auto'
                 }));
             }
 
-            function updateTextColor() {
+            function updateNavContrast() {
                 if (isMinimal) {
-                    setTextColor(getBgLuminance() > 0.5 ? '#000000' : '#ffffff');
+                    const now = performance.now();
+                    if (now - lastContrastCheck < contrastInterval) return;
+                    lastContrastCheck = now;
+                    setTextColor(checkContrast() ? '#000000' : '#ffffff');
                 } else {
                     setTextColor('#ffffff');
                 }
             }
+
+            document.querySelectorAll('img[loading="lazy"]').forEach(img => {
+                img.addEventListener('load', () => imgCache.delete(img), { once: true });
+            });
 
             function setMinimal(should) {
                 if (should && !isMinimal) {
@@ -284,7 +324,7 @@
                     navItems.forEach(item => gsap.to(item, { padding: "12px 24px", duration: 0.3, ease: "power2.out" }));
                     gsap.to(highlight, { opacity: 1, duration: 0.6, ease: "power2.out", delay: 0.15 });
                 }
-                updateTextColor();
+                updateNavContrast();
             }
 
             window.addEventListener('scroll', () => {
@@ -292,12 +332,7 @@
                 lastScrollY = window.scrollY;
                 if (dir > 0 && window.scrollY > 100) setMinimal(true);
                 else if (dir < 0) setMinimal(false);
-
-                const now = Date.now();
-                if (now - lastSampleTime > 80) {
-                    lastSampleTime = now;
-                    updateTextColor();
-                }
+                updateNavContrast();
             }, { passive: true });
 
             root.addEventListener('mouseenter', () => {
@@ -318,7 +353,7 @@
                 }
             });
 
-            requestAnimationFrame(updateTextColor);
+            requestAnimationFrame(updateNavContrast);
         }
     }
 
