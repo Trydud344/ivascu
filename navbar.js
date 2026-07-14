@@ -86,6 +86,7 @@
                     <div class="nav-item" data-index="3" data-href="/inspiration-wall">inspiration wall</div>
                     <div class="nav-item" data-index="4" data-href="/guestbook">guestbook</div>
                     <div class="nav-item" data-index="5" data-href="/color-palette">color palette</div>
+                    <div class="nav-item" data-index="6" data-href="/test">test</div>
                 </div>
             `;
 

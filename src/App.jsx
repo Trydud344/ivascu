@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import GradualBlur from './components/GradualBlur/GradualBlur';
 import Home from './pages/Home';
 import CameraRoll from './pages/CameraRoll';
+import Test from './pages/Test';
 
 function Pages() {
   const [location] = useLocation();
@@ -29,6 +30,17 @@ function Pages() {
           transition={{ duration: 0.25 }}
         >
           <CameraRoll />
+        </motion.div>
+      )}
+      {location === '/test' && (
+        <motion.div
+          key="test"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.25 }}
+        >
+          <Test />
         </motion.div>
       )}
     </AnimatePresence>
