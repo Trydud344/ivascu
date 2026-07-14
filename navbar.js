@@ -341,6 +341,7 @@
                     gsap.to(navBar, { scale: 1, duration: 0.3, ease: "power2.out" });
                     navItems.forEach(item => gsap.to(item, { padding: "12px 24px", duration: 0.3, ease: "power2.out" }));
                     gsap.to(highlight, { opacity: 1, duration: 0.5, ease: "power2.out", delay: 0.1 });
+                    setTextColor('#ffffff');
                 }
             });
 
