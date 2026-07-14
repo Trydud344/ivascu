@@ -175,22 +175,22 @@
             });
 
             function setActiveByPath(path) {
-              navItems.forEach((ni) => {
-                const href = ni.getAttribute('data-href');
-                ni.classList.toggle('active', href === path);
-              });
+                navItems.forEach(ni => {
+                    const href = ni.getAttribute('data-href');
+                    ni.classList.toggle('active', href === path);
+                });
             }
 
             setActiveByPath(window.location.pathname);
 
-            navBar.addEventListener('click', (e) => {
-              const item = e.target.closest('.nav-item');
-              if (!item) return;
-              const href = item.getAttribute('data-href');
-              if (!href || href === window.location.pathname) return;
-              history.pushState(null, '', href);
-              setActiveByPath(href);
-              window.dispatchEvent(new PopStateEvent('popstate'));
+            navBar.addEventListener('click', e => {
+                const item = e.target.closest('.nav-item');
+                if (!item) return;
+                const href = item.getAttribute('data-href');
+                if (!href || href === window.location.pathname) return;
+                history.pushState(null, '', href);
+                setActiveByPath(href);
+                window.dispatchEvent(new PopStateEvent('popstate'));
             });
 
             let isMinimal = false;
@@ -247,9 +247,9 @@
             }
 
             function parseRGBA(str) {
-                const m = str.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
+                const m = str.match(/rgba?\((\d+)\s*,?\s*(\d+)\s*,?\s*(\d+)(?:\s*,?\s*([\d.]+))?\)/);
                 if (!m) return null;
-                return { r: +m[1], g: +m[2], b: +m[3], a: m[4] !== undefined ? +m[4] : 1 };
+                return { r: +m[1], g: +m[2], b: +m[3], a: m[4] ? +m[4] : 1 };
             }
 
             function sampleLuminanceAtPoint(x, y) {
@@ -306,9 +306,9 @@
                 }
             }
 
-            document.querySelectorAll('img[loading="lazy"]').forEach(img => {
-                img.addEventListener('load', () => imgCache.delete(img), { once: true });
-            });
+            document.addEventListener('load', e => {
+                if (e.target.tagName === 'IMG') imgCache.delete(e.target);
+            }, true);
 
             function setMinimal(should) {
                 if (should && !isMinimal) {
