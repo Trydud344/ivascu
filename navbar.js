@@ -198,22 +198,57 @@
             let currentTextColor = '#ffffff';
             let lastSampleTime = 0;
 
-            function getBgLuminance() {
-                const rect = root.getBoundingClientRect();
-                const sampleX = rect.left + rect.width / 2;
-                const sampleY = rect.bottom + 8;
-                const els = document.elementsFromPoint(sampleX, sampleY);
+            function sampleImagePixel(img, sx, sy) {
+                const r = img.getBoundingClientRect();
+                if (!r.width || !r.height || !img.complete) return -1;
+                const c = document.createElement('canvas');
+                c.width = img.naturalWidth;
+                c.height = img.naturalHeight;
+                const ctx = c.getContext('2d');
+                ctx.drawImage(img, 0, 0);
+                const px = Math.round((sx - r.left) / r.width * img.naturalWidth);
+                const py = Math.round((sy - r.top) / r.height * img.naturalHeight);
+                try {
+                    const d = ctx.getImageData(
+                        Math.max(0, Math.min(px, img.naturalWidth - 1)),
+                        Math.max(0, Math.min(py, img.naturalHeight - 1)), 1, 1
+                    ).data;
+                    return (0.299 * d[0] + 0.587 * d[1] + 0.114 * d[2]) / 255;
+                } catch { return -1; }
+            }
+
+            function samplePoint(sx, sy) {
+                const els = document.elementsFromPoint(sx, sy);
                 for (const el of els) {
                     if (el === root || root.contains(el)) continue;
                     if (el === document.body || el === document.documentElement) continue;
+                    if (el.tagName === 'IMG') {
+                        const lum = sampleImagePixel(el, sx, sy);
+                        if (lum >= 0) return lum;
+                        continue;
+                    }
                     const bg = getComputedStyle(el).backgroundColor;
                     if (!bg || bg === 'rgba(0, 0, 0, 0)' || bg === 'transparent') continue;
                     const rgb = bg.match(/\d+/g);
                     if (!rgb || rgb.length < 3) continue;
-                    const r = parseInt(rgb[0]), g = parseInt(rgb[1]), b = parseInt(rgb[2]);
-                    return (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+                    return (0.299 * parseInt(rgb[0]) + 0.587 * parseInt(rgb[1]) + 0.114 * parseInt(rgb[2])) / 255;
                 }
-                return 0;
+                return -1;
+            }
+
+            function getBgLuminance() {
+                const rect = root.getBoundingClientRect();
+                const pts = [
+                    { x: rect.left + rect.width * 0.25, y: rect.bottom + 8 },
+                    { x: rect.left + rect.width * 0.5, y: rect.bottom + 8 },
+                    { x: rect.left + rect.width * 0.75, y: rect.bottom + 8 },
+                ];
+                let total = 0, count = 0;
+                for (const p of pts) {
+                    const lum = samplePoint(p.x, p.y);
+                    if (lum >= 0) { total += lum; count++; }
+                }
+                return count > 0 ? total / count : 0;
             }
 
             function setTextColor(target) {
