@@ -1,0 +1,9 @@
+node_modules
+dist
+.vite
+*.bak
+.agents
+.claude
+.oxlintrc.json
+public/photos
+public/photos.json

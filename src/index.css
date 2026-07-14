@@ -1,0 +1,14 @@
+:root {
+  --font-geist: 'Geist Variable', sans-serif;
+  --font-space-grotesk: 'Space Grotesk Variable', sans-serif;
+  --font-jetbrains-mono: 'JetBrains Mono Variable', monospace;
+}
+
+.typeset-docs {
+  --typeset-font-body: var(--font-geist);
+  --typeset-font-heading: var(--font-space-grotesk);
+  --typeset-font-mono: var(--font-jetbrains-mono);
+  --typeset-size: 15px;
+  --typeset-leading: 1.6;
+  --typeset-flow: 1.25em;
+}
