@@ -1,0 +1,71 @@
+.home-container {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 60px 0 100px;
+  position: relative;
+}
+
+.home-hero-header {
+  margin-bottom: 16px;
+}
+
+.home-hero-subtitle {
+  font-size: 24px;
+  font-weight: 400;
+  color: #999999;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin: 0 0 12px 0;
+}
+
+.home-hero-title-primary {
+  font-size: 72px;
+  font-weight: 800;
+  margin: 0;
+  line-height: 0.9;
+  letter-spacing: -0.04em;
+  color: #ffffff;
+}
+
+.home-hero-title-secondary {
+  font-size: 52px;
+  font-weight: 300;
+  margin: 8px 0 0 0;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, #aaaaaa, #444444);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.home-skills-intro {
+  font-size: 36px;
+  font-weight: 300;
+  color: #666666;
+  margin-bottom: 6px;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.home-skills-rotating {
+  font-size: 36px;
+  font-weight: 300;
+  color: #666666;
+  margin-bottom: 48px;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.home-paragraph {
+  margin-bottom: 16px;
+  letter-spacing: -0.005em;
+}
+
+.home-section-title {
+  font-size: 24px;
+  font-weight: 500;
+  color: #e0e0e0;
+  margin-top: 48px;
+  margin-bottom: 16px;
+  letter-spacing: -0.01em;
+}

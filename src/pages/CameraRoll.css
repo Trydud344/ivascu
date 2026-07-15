@@ -1,0 +1,46 @@
+.camera-roll-status-message {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 60px 24px 100px;
+  text-align: center;
+  color: #888888;
+}
+
+.camera-roll-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 60px 24px 100px;
+}
+
+.camera-roll-grid {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.camera-roll-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.camera-roll-item {
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  background: #1c1f1d;
+}
+
+.camera-roll-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.3s ease;
+}
+
+.camera-roll-item:hover .camera-roll-image {
+  transform: scale(1.03);
+}

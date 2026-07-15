@@ -1,33 +1,38 @@
+import './Test.css';
+
+const BLOCKS_COUNT = 40;
+const COLOR_LIGHT_BG = '#ffffff';
+const COLOR_DARK_BG = '#181818';
+const COLOR_LIGHT_TEXT = '#ffffff';
+const COLOR_DARK_TEXT = '#000000';
+
 export default function Test() {
-  const blocks = Array.from({ length: 40 }, (_, i) => ({
-    id: i,
-    color: i % 2 === 0 ? '#ffffff' : '#181818',
-    label: i % 2 === 0 ? `WHITE BLOCK ${i + 1}` : `DARK BLOCK ${i + 1}`
-  }));
+  const blocks = Array.from({ length: BLOCKS_COUNT }, (_, index) => {
+    const isEven = index % 2 === 0;
+    const color = isEven ? COLOR_LIGHT_BG : COLOR_DARK_BG;
+    const textColor = isEven ? COLOR_DARK_TEXT : COLOR_LIGHT_TEXT;
+    const label = isEven ? `WHITE BLOCK ${index + 1}` : `DARK BLOCK ${index + 1}`;
+
+    return {
+      id: index,
+      color,
+      textColor,
+      label,
+    };
+  });
 
   return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      fontFamily: 'monospace',
-      fontSize: '12px',
-      letterSpacing: '0.1em',
-      textTransform: 'uppercase',
-    }}>
-      {blocks.map(b => (
+    <div className="test-container">
+      {blocks.map((block) => (
         <div
-          key={b.id}
+          key={block.id}
+          className="test-block"
           style={{
-            height: '100vh',
-            background: b.color,
-            color: b.color === '#ffffff' ? '#000' : '#fff',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            borderBottom: '1px solid rgba(128,128,128,0.2)',
+            background: block.color,
+            color: block.textColor,
           }}
         >
-          {b.label}
+          {block.label}
         </div>
       ))}
     </div>

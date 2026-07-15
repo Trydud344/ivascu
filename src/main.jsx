@@ -3,6 +3,7 @@ import './typeset.css';
 import '@fontsource-variable/geist';
 import '@fontsource-variable/space-grotesk';
 import '@fontsource-variable/jetbrains-mono';
+import './components/NavBar/NavBar.js';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
