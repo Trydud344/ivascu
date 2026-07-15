@@ -15,6 +15,5 @@ npm run build
 echo "── Deploying to $WEBROOT ──"
 sudo rm -rf "$WEBROOT/assets" "$WEBROOT/index.html" "$WEBROOT/navbar.js"
 sudo cp -r "$SITE_DIR/dist/"* "$WEBROOT/"
-sudo cp "$SITE_DIR/navbar.js" "$WEBROOT/"
 
 echo "── Done ──"

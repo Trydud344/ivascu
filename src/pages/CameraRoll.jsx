@@ -1,18 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import Lightbox from '../components/Lightbox';
-
-function useMediaQuery(query) {
-  const [matches, setMatches] = useState(() => window.matchMedia(query).matches);
-
-  useEffect(() => {
-    const mq = window.matchMedia(query);
-    const handler = (e) => setMatches(e.matches);
-    mq.addEventListener('change', handler);
-    return () => mq.removeEventListener('change', handler);
-  }, [query]);
-
-  return matches;
-}
+import useMediaQuery from '../hooks/useMediaQuery';
+import './CameraRoll.css';
 
 function CameraRoll() {
   const [photos, setPhotos] = useState([]);
@@ -29,9 +18,11 @@ function CameraRoll() {
     setError(null);
 
     fetch('/photos.json')
-      .then((r) => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.json();
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        return response.json();
       })
       .then((data) => {
         setPhotos(data);
@@ -45,7 +36,9 @@ function CameraRoll() {
 
   const columns = useMemo(() => {
     const cols = Array.from({ length: columnCount }, () => []);
-    photos.forEach((photo, i) => cols[i % columnCount].push(photo));
+    photos.forEach((photo, index) => {
+      cols[index % columnCount].push(photo);
+    });
     return cols;
   }, [photos, columnCount]);
 
@@ -54,75 +47,41 @@ function CameraRoll() {
   }, []);
 
   if (loading) {
-    return (
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '60px 24px 100px', textAlign: 'center', color: '#888' }}>
-        Loading photos…
-      </div>
-    );
+    return <div className="camera-roll-status-message">Loading photos…</div>;
   }
 
   if (error) {
     return (
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '60px 24px 100px', textAlign: 'center', color: '#888' }}>
+      <div className="camera-roll-status-message">
         Could not load photos. {error}
       </div>
     );
   }
 
   if (photos.length === 0) {
-    return (
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '60px 24px 100px', textAlign: 'center', color: '#888' }}>
-        No photos yet.
-      </div>
-    );
+    return <div className="camera-roll-status-message">No photos yet.</div>;
   }
 
   return (
     <>
-      <div style={{ maxWidth: 1400, margin: '0 auto', padding: '60px 24px 100px' }}>
-        <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+      <div className="camera-roll-container">
+        <div className="camera-roll-grid">
           {columns.map((col, colIdx) => (
-            <div
-              key={colIdx}
-              style={{
-                flex: 1,
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 12,
-              }}
-            >
-              {col.map((photo, photoIdx) => {
+            <div key={colIdx} className="camera-roll-column">
+              {col.map((photo) => {
                 const globalIdx = photos.indexOf(photo);
                 return (
                   <div
                     key={photo.id}
-                    style={{
-                      width: '100%',
-                      aspectRatio: photo.aspectRatio || 1,
-                      borderRadius: 8,
-                      overflow: 'hidden',
-                      cursor: 'pointer',
-                      background: '#1c1f1d',
-                    }}
+                    className="camera-roll-item"
+                    style={{ aspectRatio: photo.aspectRatio || 1 }}
                     onClick={() => openLightbox(globalIdx)}
                   >
                     <img
                       src={photo.thumb}
                       alt=""
                       loading="lazy"
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover',
-                        display: 'block',
-                        transition: 'transform 0.3s ease',
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = 'scale(1.03)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = 'scale(1)';
-                      }}
+                      className="camera-roll-image"
                     />
                   </div>
                 );
